@@ -1,5 +1,7 @@
 # EasyTPA
 
+> **Built for the European Hytale survival server at `play.hyfyve.net`**
+
 Let your players teleport to each other! Simple TPA plugin for Hytale servers.
 
 ---
