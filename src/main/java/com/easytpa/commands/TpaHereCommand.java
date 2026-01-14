@@ -24,6 +24,7 @@ public class TpaHereCommand extends AbstractPlayerCommand {
         super("tpahere", "Ask a player to teleport to you");
         this.plugin = plugin;
         setAllowsExtraArguments(true);
+        requirePermission("tpa.use");
     }
 
     @Override

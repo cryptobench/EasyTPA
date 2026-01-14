@@ -19,6 +19,7 @@ public class TpaToggleCommand extends AbstractPlayerCommand {
     public TpaToggleCommand(EasyTPA plugin) {
         super("tpatoggle", "Toggle TPA requests on/off");
         this.plugin = plugin;
+        requirePermission("tpa.use");
     }
 
     @Override

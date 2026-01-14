@@ -1,7 +1,7 @@
-# EasyHome Plugin - Development Context
+# EasyTPA Plugin - Development Context
 
 ## Project Overview
-A home teleportation plugin for Hytale servers with configurable limits and warmup delays.
+A teleport request plugin for Hytale servers allowing players to request teleports to each other.
 
 ## How to Explore the Hytale Server API
 
@@ -203,6 +203,93 @@ public class MyCommand extends AbstractPlayerCommand {
 }
 ```
 
+## Permissions System
+
+### Adding Permission Requirements to Commands
+Use `requirePermission()` in command constructors to require a permission:
+```java
+public class MyCommand extends AbstractPlayerCommand {
+    public MyCommand() {
+        super("mycommand", "Description");
+        requirePermission("myplugin.use");  // Players need this permission to use the command
+    }
+}
+```
+
+### Checking Permissions Manually
+```java
+// On Player object (in command execute methods)
+Player player = store.getComponent(playerRef, Player.getComponentType());
+if (player.hasPermission("myplugin.admin")) {
+    // Do admin stuff
+}
+
+// Via PermissionsModule (when you only have UUID)
+import com.hypixel.hytale.server.core.permissions.PermissionsModule;
+
+if (PermissionsModule.get().hasPermission(playerData.getUuid(), "myplugin.admin")) {
+    // Do admin stuff
+}
+```
+
+### Managing Permissions (Server Console Commands)
+```bash
+# Add permission to a group
+perm group add <GroupName> <permission>
+perm group add Adventure tpa.use
+perm group add Adventure tpa.bypass.warmup
+
+# Remove permission from a group
+perm group remove <GroupName> <permission>
+
+# List group permissions
+perm group list <GroupName>
+
+# Add user to a group
+perm user group add <username> <GroupName>
+
+# Add permission directly to user
+perm user add <username> <permission>
+
+# Test if you have a permission
+perm test <permission>
+```
+
+### Permission Format & Wildcards
+```
+myplugin.use          # Exact permission
+myplugin.*            # Wildcard - grants all myplugin.* permissions
+*                     # All permissions (admin/OP)
+-myplugin.use         # Negates/denies a specific permission
+-*                    # Denies all permissions
+```
+
+### permissions.json Structure
+Located at `Server/permissions.json`:
+```json
+{
+  "users": {
+    "uuid-here": {
+      "groups": ["Adventure", "Builder"]
+    }
+  },
+  "groups": {
+    "Default": [],
+    "Adventure": ["tpa.use"],
+    "OP": ["*"]
+  }
+}
+```
+
+**Important:** Group names are case-sensitive!
+
+### EasyTPA Permissions
+| Permission | Description |
+|------------|-------------|
+| `tpa.use` | Basic access to all TPA commands |
+| `tpa.bypass.warmup` | Skip teleport warmup delay |
+| `tpa.admin` | Admin commands (if any) |
+
 ## Messages (No Minecraft Color Codes!)
 ```java
 import com.hypixel.hytale.server.core.Message;
@@ -283,4 +370,7 @@ import com.hypixel.hytale.math.vector.Vector3i;
 
 // Messages
 import com.hypixel.hytale.server.core.Message;
+
+// Permissions
+import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 ```

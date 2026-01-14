@@ -23,6 +23,7 @@ public class TpAcceptCommand extends AbstractPlayerCommand {
     public TpAcceptCommand(EasyTPA plugin) {
         super("tpaccept", "Accept a teleport request");
         this.plugin = plugin;
+        requirePermission("tpa.use");
     }
 
     @Override

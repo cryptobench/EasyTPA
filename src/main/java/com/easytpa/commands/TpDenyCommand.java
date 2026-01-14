@@ -22,6 +22,7 @@ public class TpDenyCommand extends AbstractPlayerCommand {
     public TpDenyCommand(EasyTPA plugin) {
         super("tpdeny", "Deny a teleport request");
         this.plugin = plugin;
+        requirePermission("tpa.use");
     }
 
     @Override

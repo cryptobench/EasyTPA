@@ -21,6 +21,7 @@ public class TpaCancelCommand extends AbstractPlayerCommand {
     public TpaCancelCommand(EasyTPA plugin) {
         super("tpacancel", "Cancel your teleport request");
         this.plugin = plugin;
+        requirePermission("tpa.use");
     }
 
     @Override

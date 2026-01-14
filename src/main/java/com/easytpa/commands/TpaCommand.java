@@ -24,6 +24,7 @@ public class TpaCommand extends AbstractPlayerCommand {
         super("tpa", "Ask to teleport to a player");
         this.plugin = plugin;
         setAllowsExtraArguments(true);
+        requirePermission("tpa.use");
     }
 
     @Override
