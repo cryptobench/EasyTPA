@@ -1,0 +1,11 @@
+{
+  "Group": "cryptobench",
+  "Name": "EasyTPA",
+  "Version": "1.0.0",
+  "Main": "com.easytpa.EasyTPA",
+  "Description": "Simple teleport requests for your Hytale server - /tpa, /tpaccept, /tpdeny and more!",
+  "Authors": [],
+  "Website": "",
+  "Dependencies": {},
+  "OptionalDependencies": {}
+}

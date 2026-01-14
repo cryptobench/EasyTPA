@@ -1,0 +1,101 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25-ea'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EasyTPA
+          path: target/EasyTPA-*.jar
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: EasyTPA
+
+      - name: Generate version
+        id: version
+        run: echo "version=v1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Rename JAR
+        run: mv EasyTPA-*.jar EasyTPA-${{ steps.version.outputs.version }}.jar
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: EasyTPA ${{ steps.version.outputs.version }}
+          body: |
+            ## EasyTPA ${{ steps.version.outputs.version }}
+
+            **Commit:** ${{ github.sha }}
+            **Released:** ${{ github.event.head_commit.timestamp }}
+
+            ---
+
+            ### How to Install
+
+            1. Download `EasyTPA-${{ steps.version.outputs.version }}.jar` below
+            2. Drop it in your server's `plugins` folder
+            3. Restart your server
+            4. Done! Players can now use `/tpa`
+
+            ---
+
+            ### Commands
+
+            | Command | What it does |
+            |---------|--------------|
+            | `/tpa <player>` | Ask to teleport to someone |
+            | `/tpahere <player>` | Ask someone to come to you |
+            | `/tpaccept` | Accept a request |
+            | `/tpdeny` | Deny a request |
+            | `/tpacancel` | Cancel your request |
+            | `/tpatoggle` | Turn requests on/off |
+
+            ---
+
+            ### Quick Config
+
+            ```
+            /easytpa admin set warmup 5    # 5 second delay
+            /easytpa admin set timeout 120 # 2 minute request timeout
+            /easytpa admin set cooldown 10 # 10 seconds between requests
+            ```
+
+          files: EasyTPA-${{ steps.version.outputs.version }}.jar
+          draft: false
+          prerelease: false
+          make_latest: true
