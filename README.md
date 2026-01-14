@@ -6,7 +6,7 @@ Let your players teleport to each other! Simple TPA plugin for Hytale servers.
 
 ## Quick Start
 
-1. Download the latest `EasyTPA.jar` from [Releases](../../releases)
+1. Download the latest `EasyTPA.jar` from [Releases](../../releases/latest)
 2. Put it in your server's `plugins` folder
 3. Restart your server
 4. Done! Players can now use `/tpa`
