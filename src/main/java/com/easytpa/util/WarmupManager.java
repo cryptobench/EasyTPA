@@ -3,8 +3,8 @@ package com.easytpa.util;
 import com.easytpa.EasyTPA;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -141,10 +141,8 @@ public class WarmupManager {
                     return;
                 }
 
-                Vector3d position = targetTransform.getPosition();
-                Vector3f rotation = targetTransform.getRotation();
-
-                Teleport teleport = new Teleport(world, position, rotation);
+                Transform transform = targetTransform.getTransform();
+                Teleport teleport = Teleport.createForPlayer(world, transform);
                 store.addComponent(playerRef, Teleport.getComponentType(), teleport);
 
                 playerData.sendMessage(Messages.teleportComplete());
