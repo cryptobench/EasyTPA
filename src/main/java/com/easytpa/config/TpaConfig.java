@@ -77,10 +77,50 @@ public class TpaConfig {
         save();
     }
 
+    public int getRtpMinDistance() {
+        return data.rtpMinDistance;
+    }
+
+    public int getRtpMaxDistance() {
+        return data.rtpMaxDistance;
+    }
+
+    public int getRtpMaxAttempts() {
+        return data.rtpMaxAttempts;
+    }
+
+    public int getRtpCooldownSeconds() {
+        return data.rtpCooldownSeconds;
+    }
+
+    public void setRtpMinDistance(int distance) {
+        data.rtpMinDistance = Math.max(100, Math.min(10000, distance));
+        save();
+    }
+
+    public void setRtpMaxDistance(int distance) {
+        data.rtpMaxDistance = Math.max(500, Math.min(50000, distance));
+        save();
+    }
+
+    public void setRtpMaxAttempts(int attempts) {
+        data.rtpMaxAttempts = Math.max(1, Math.min(50, attempts));
+        save();
+    }
+
+    public void setRtpCooldownSeconds(int seconds) {
+        data.rtpCooldownSeconds = Math.max(0, Math.min(3600, seconds));
+        save();
+    }
+
     private static class ConfigData {
         int requestTimeoutSeconds = 60;
         int warmupSeconds = 3;
         int cooldownSeconds = 5;
         double movementThreshold = 0.5;
+        int rtpMinDistance = 500;
+        int rtpMaxDistance = 5000;
+        int rtpMaxAttempts = 10;
+        int rtpCooldownSeconds = 60;
     }
 }

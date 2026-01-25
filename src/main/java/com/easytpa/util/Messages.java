@@ -130,4 +130,27 @@ public class Messages {
     public static Message adminUsage() {
         return Message.raw("Usage: /easytpa admin <config|set|reload>").color(RED);
     }
+
+    public static Message rtpSearching() {
+        return Message.raw("Searching for a safe location...").color(YELLOW);
+    }
+
+    public static Message rtpTeleporting(int seconds) {
+        if (seconds == 0) {
+            return Message.raw("Random teleporting...").color(GREEN);
+        }
+        return Message.raw("Random teleporting in " + seconds + " seconds... Don't move!").color(YELLOW);
+    }
+
+    public static Message rtpComplete(int x, int z) {
+        return Message.raw("Teleported to X: " + x + ", Z: " + z + "!").color(GREEN);
+    }
+
+    public static Message rtpNoSafeLocation() {
+        return Message.raw("Could not find a safe location. Try again!").color(RED);
+    }
+
+    public static Message rtpOnCooldown(int seconds) {
+        return Message.raw("RTP cooldown: wait " + seconds + " seconds.").color(RED);
+    }
 }

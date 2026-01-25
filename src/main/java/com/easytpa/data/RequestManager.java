@@ -11,6 +11,7 @@ public class RequestManager {
     private final Map<UUID, List<TpaRequest>> pendingRequests = new ConcurrentHashMap<>();
     private final Map<UUID, TpaRequest> outgoingRequests = new ConcurrentHashMap<>();
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> rtpCooldowns = new ConcurrentHashMap<>();
     private final Set<UUID> tpaDisabled = ConcurrentHashMap.newKeySet();
     private final ScheduledExecutorService cleanupExecutor;
 
@@ -25,6 +26,7 @@ public class RequestManager {
         pendingRequests.clear();
         outgoingRequests.clear();
         cooldowns.clear();
+        rtpCooldowns.clear();
     }
 
     public void createRequest(TpaRequest request) {
@@ -129,6 +131,33 @@ public class RequestManager {
         }
     }
 
+    public boolean isOnRtpCooldown(UUID playerId) {
+        Long cooldownEnd = rtpCooldowns.get(playerId);
+        if (cooldownEnd == null) {
+            return false;
+        }
+        if (System.currentTimeMillis() >= cooldownEnd) {
+            rtpCooldowns.remove(playerId);
+            return false;
+        }
+        return true;
+    }
+
+    public int getRemainingRtpCooldown(UUID playerId) {
+        Long cooldownEnd = rtpCooldowns.get(playerId);
+        if (cooldownEnd == null) {
+            return 0;
+        }
+        long remaining = cooldownEnd - System.currentTimeMillis();
+        return remaining > 0 ? (int) Math.ceil(remaining / 1000.0) : 0;
+    }
+
+    public void setRtpCooldown(UUID playerId, int seconds) {
+        if (seconds > 0) {
+            rtpCooldowns.put(playerId, System.currentTimeMillis() + seconds * 1000L);
+        }
+    }
+
     private void cleanupExpired() {
         int timeout = plugin.getConfig().getRequestTimeoutSeconds();
 
@@ -143,5 +172,6 @@ public class RequestManager {
 
         long now = System.currentTimeMillis();
         cooldowns.entrySet().removeIf(entry -> entry.getValue() <= now);
+        rtpCooldowns.entrySet().removeIf(entry -> entry.getValue() <= now);
     }
 }

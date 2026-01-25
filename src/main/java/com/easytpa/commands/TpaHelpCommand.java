@@ -35,5 +35,6 @@ public class TpaHelpCommand extends AbstractPlayerCommand {
         playerData.sendMessage(Messages.helpCommand("tpdeny", "Deny a teleport request"));
         playerData.sendMessage(Messages.helpCommand("tpacancel", "Cancel your pending request"));
         playerData.sendMessage(Messages.helpCommand("tpatoggle", "Turn TPA requests on/off"));
+        playerData.sendMessage(Messages.helpCommand("rtp", "Teleport to a random location"));
     }
 }

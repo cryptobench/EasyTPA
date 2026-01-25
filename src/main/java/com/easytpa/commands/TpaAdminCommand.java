@@ -64,6 +64,10 @@ public class TpaAdminCommand extends AbstractPlayerCommand {
         playerData.sendMessage(Messages.configValue("Timeout", config.getRequestTimeoutSeconds() + "s"));
         playerData.sendMessage(Messages.configValue("Warmup", config.getWarmupSeconds() + "s"));
         playerData.sendMessage(Messages.configValue("Cooldown", config.getCooldownSeconds() + "s"));
+        playerData.sendMessage(Messages.configValue("RTP Min", config.getRtpMinDistance() + " blocks"));
+        playerData.sendMessage(Messages.configValue("RTP Max", config.getRtpMaxDistance() + " blocks"));
+        playerData.sendMessage(Messages.configValue("RTP Attempts", String.valueOf(config.getRtpMaxAttempts())));
+        playerData.sendMessage(Messages.configValue("RTP Cooldown", config.getRtpCooldownSeconds() + "s"));
     }
 
     private void handleSet(PlayerRef playerData, String[] args, TpaConfig config) {
@@ -71,6 +75,10 @@ public class TpaAdminCommand extends AbstractPlayerCommand {
             playerData.sendMessage(Messages.helpCommand("easytpa admin set timeout <seconds>", "Request expiry"));
             playerData.sendMessage(Messages.helpCommand("easytpa admin set warmup <seconds>", "Teleport delay"));
             playerData.sendMessage(Messages.helpCommand("easytpa admin set cooldown <seconds>", "Between requests"));
+            playerData.sendMessage(Messages.helpCommand("easytpa admin set rtpmin <blocks>", "RTP min distance"));
+            playerData.sendMessage(Messages.helpCommand("easytpa admin set rtpmax <blocks>", "RTP max distance"));
+            playerData.sendMessage(Messages.helpCommand("easytpa admin set rtpattempts <num>", "RTP search attempts"));
+            playerData.sendMessage(Messages.helpCommand("easytpa admin set rtpcooldown <seconds>", "RTP cooldown"));
             return;
         }
 
@@ -93,6 +101,26 @@ public class TpaAdminCommand extends AbstractPlayerCommand {
                     int seconds = Integer.parseInt(value);
                     config.setCooldownSeconds(seconds);
                     playerData.sendMessage(Messages.configUpdated("Cooldown", seconds + "s"));
+                }
+                case "rtpmin" -> {
+                    int distance = Integer.parseInt(value);
+                    config.setRtpMinDistance(distance);
+                    playerData.sendMessage(Messages.configUpdated("RTP Min", distance + " blocks"));
+                }
+                case "rtpmax" -> {
+                    int distance = Integer.parseInt(value);
+                    config.setRtpMaxDistance(distance);
+                    playerData.sendMessage(Messages.configUpdated("RTP Max", distance + " blocks"));
+                }
+                case "rtpattempts" -> {
+                    int attempts = Integer.parseInt(value);
+                    config.setRtpMaxAttempts(attempts);
+                    playerData.sendMessage(Messages.configUpdated("RTP Attempts", String.valueOf(attempts)));
+                }
+                case "rtpcooldown" -> {
+                    int seconds = Integer.parseInt(value);
+                    config.setRtpCooldownSeconds(seconds);
+                    playerData.sendMessage(Messages.configUpdated("RTP Cooldown", seconds + "s"));
                 }
                 default -> playerData.sendMessage(Messages.adminUsage());
             }

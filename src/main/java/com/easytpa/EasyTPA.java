@@ -31,6 +31,7 @@ public class EasyTPA extends JavaPlugin {
         getCommandRegistry().registerCommand(new TpaToggleCommand(this));
         getCommandRegistry().registerCommand(new TpaHelpCommand(this));
         getCommandRegistry().registerCommand(new TpaAdminCommand(this));
+        getCommandRegistry().registerCommand(new RtpCommand(this));
     }
 
     @Override

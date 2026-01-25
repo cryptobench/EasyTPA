@@ -20,6 +20,7 @@ public class WarmupManager {
     private final EasyTPA plugin;
     private final ScheduledExecutorService scheduler;
     private final Map<UUID, WarmupData> activeWarmups = new ConcurrentHashMap<>();
+    private final Map<UUID, RtpWarmupData> activeRtpWarmups = new ConcurrentHashMap<>();
 
     public WarmupManager(EasyTPA plugin) {
         this.plugin = plugin;
@@ -29,6 +30,9 @@ public class WarmupManager {
     public void shutdown() {
         for (UUID playerId : activeWarmups.keySet()) {
             cancelWarmup(playerId);
+        }
+        for (UUID playerId : activeRtpWarmups.keySet()) {
+            cancelRtpWarmup(playerId);
         }
         scheduler.shutdown();
     }
@@ -152,6 +156,124 @@ public class WarmupManager {
         });
     }
 
+    public void startRtpWarmup(PlayerRef playerData,
+                               Ref<EntityStore> playerRef,
+                               Store<EntityStore> store,
+                               World world,
+                               Vector3d targetLocation,
+                               int warmupSeconds,
+                               boolean bypassWarmup) {
+
+        UUID playerId = playerData.getUuid();
+        cancelWarmup(playerId);
+        cancelRtpWarmup(playerId);
+
+        if (bypassWarmup || warmupSeconds <= 0) {
+            executeRtpTeleport(playerData, playerRef, store, world, targetLocation);
+            return;
+        }
+
+        TransformComponent transform = store.getComponent(playerRef, TransformComponent.getComponentType());
+        Vector3d startPos = transform.getPosition();
+
+        playerData.sendMessage(Messages.rtpTeleporting(warmupSeconds));
+
+        RtpWarmupData data = new RtpWarmupData(playerData, playerRef, store, world, targetLocation,
+                startPos.getX(), startPos.getY(), startPos.getZ(), plugin.getConfig().getMovementThreshold());
+
+        ScheduledFuture<?> checkFuture = scheduler.scheduleAtFixedRate(() -> {
+            checkRtpMovement(playerId, data);
+        }, 500, 500, TimeUnit.MILLISECONDS);
+
+        ScheduledFuture<?> teleportFuture = scheduler.schedule(() -> {
+            doRtpTeleport(playerId);
+        }, warmupSeconds, TimeUnit.SECONDS);
+
+        data.checkFuture = checkFuture;
+        data.teleportFuture = teleportFuture;
+        activeRtpWarmups.put(playerId, data);
+    }
+
+    private void checkRtpMovement(UUID playerId, RtpWarmupData data) {
+        if (!activeRtpWarmups.containsKey(playerId)) {
+            return;
+        }
+
+        try {
+            data.world.execute(() -> {
+                try {
+                    TransformComponent transform = data.store.getComponent(data.playerRef, TransformComponent.getComponentType());
+                    if (transform == null) {
+                        return;
+                    }
+
+                    Vector3d currentPos = transform.getPosition();
+                    double dx = currentPos.getX() - data.startX;
+                    double dy = currentPos.getY() - data.startY;
+                    double dz = currentPos.getZ() - data.startZ;
+                    double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                    if (distance > data.movementThreshold) {
+                        data.playerData.sendMessage(Messages.teleportCancelled());
+                        cancelRtpWarmup(playerId);
+                    }
+                } catch (Exception e) {
+                    // Ignore
+                }
+            });
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+
+    private void doRtpTeleport(UUID playerId) {
+        RtpWarmupData data = activeRtpWarmups.remove(playerId);
+        if (data == null) {
+            return;
+        }
+
+        if (data.checkFuture != null) {
+            data.checkFuture.cancel(false);
+        }
+
+        executeRtpTeleport(data.playerData, data.playerRef, data.store, data.world, data.targetLocation);
+    }
+
+    public void cancelRtpWarmup(UUID playerId) {
+        RtpWarmupData data = activeRtpWarmups.remove(playerId);
+        if (data != null) {
+            if (data.checkFuture != null) {
+                data.checkFuture.cancel(false);
+            }
+            if (data.teleportFuture != null) {
+                data.teleportFuture.cancel(false);
+            }
+        }
+    }
+
+    private void executeRtpTeleport(PlayerRef playerData,
+                                    Ref<EntityStore> playerRef,
+                                    Store<EntityStore> store,
+                                    World world,
+                                    Vector3d targetLocation) {
+        world.execute(() -> {
+            try {
+                TransformComponent currentTransform = store.getComponent(playerRef, TransformComponent.getComponentType());
+                if (currentTransform == null) {
+                    return;
+                }
+
+                Transform transform = new Transform(targetLocation, currentTransform.getRotation());
+                Teleport teleport = Teleport.createForPlayer(world, transform);
+                store.addComponent(playerRef, Teleport.getComponentType(), teleport);
+
+                playerData.sendMessage(Messages.rtpComplete((int) targetLocation.getX(), (int) targetLocation.getZ()));
+            } catch (Exception e) {
+                playerData.sendMessage(Messages.rtpNoSafeLocation());
+            }
+        });
+    }
+
     private static class WarmupData {
         final PlayerRef playerData;
         final Ref<EntityStore> playerRef;
@@ -173,6 +295,32 @@ public class WarmupManager {
             this.world = world;
             this.targetData = targetData;
             this.targetRef = targetRef;
+            this.startX = startX;
+            this.startY = startY;
+            this.startZ = startZ;
+            this.movementThreshold = movementThreshold;
+        }
+    }
+
+    private static class RtpWarmupData {
+        final PlayerRef playerData;
+        final Ref<EntityStore> playerRef;
+        final Store<EntityStore> store;
+        final World world;
+        final Vector3d targetLocation;
+        final double startX, startY, startZ;
+        final double movementThreshold;
+        ScheduledFuture<?> checkFuture;
+        ScheduledFuture<?> teleportFuture;
+
+        RtpWarmupData(PlayerRef playerData, Ref<EntityStore> playerRef, Store<EntityStore> store,
+                      World world, Vector3d targetLocation,
+                      double startX, double startY, double startZ, double movementThreshold) {
+            this.playerData = playerData;
+            this.playerRef = playerRef;
+            this.store = store;
+            this.world = world;
+            this.targetLocation = targetLocation;
             this.startX = startX;
             this.startY = startY;
             this.startZ = startZ;
